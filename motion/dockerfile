@@ -1,0 +1,24 @@
+# ============================================================
+# HamCAM motion/Dockerfile
+# Version: 1.1
+# ============================================================
+FROM python:3.11-slim
+
+# OpenCV system dependencies + ffmpeg for RTSP
+RUN apt-get update && apt-get install -y \
+    libgl1 \
+    libglib2.0-0 \
+    libsm6 \
+    libxext6 \
+    libxrender1 \
+    ffmpeg \
+    --no-install-recommends && \
+    rm -rf /var/lib/apt/lists/*
+
+# Install OpenCV headless
+RUN pip install --no-cache-dir opencv-python-headless
+
+WORKDIR /app
+COPY detector.py .
+
+CMD ["python", "-u", "detector.py"]

@@ -1,0 +1,79 @@
+# ============================================================
+# HamCAM docker-compose.yml
+# Version: 1.4
+#
+# First run, from this directory:
+#   cp config.example.php config.php
+#   cp go2rtc.example.yaml go2rtc.yaml
+#   cp .env.example .env
+#   chmod 666 config.php go2rtc.yaml .env
+#   docker compose up -d --build
+#
+# Then open the site in a browser — it auto-redirects to the setup
+# wizard (setup.php) until config.php/.env are filled in for real.
+# The wizard writes config.php, go2rtc.yaml, AND this .env file, so
+# motion-detection settings here never drift out of sync with the UI.
+# ============================================================
+services:
+
+  hamcam:
+    build: .
+    container_name: hamcam
+    restart: unless-stopped
+    ports:
+      - "${HAMCAM_PORT:-8765}:80"
+    volumes:
+      - hamcam-data:/data                          # shared with motion detector
+      - ./config.php:/var/www/html/config.php       # setup.php writes here
+      - ./go2rtc.yaml:/var/www/html/go2rtc.yaml      # setup.php writes here too
+      - ./.env:/var/www/html/.env                    # setup.php writes here too
+    networks:
+      - hamcam-net
+    environment:
+      - TZ=${TZ:-UTC}
+    depends_on:
+      - go2rtc
+
+  go2rtc:
+    image: alexxit/go2rtc:latest
+    container_name: hamcam-go2rtc
+    restart: unless-stopped
+    ports:
+      - "${GO2RTC_API_PORT:-1984}:1984"
+      - "${GO2RTC_RTSP_PORT:-8554}:8554"
+    volumes:
+      - ./go2rtc.yaml:/config/go2rtc.yaml:ro
+    networks:
+      - hamcam-net
+    environment:
+      - TZ=${TZ:-UTC}
+
+  motion:
+    build: ./motion
+    container_name: hamcam-motion
+    restart: unless-stopped
+    volumes:
+      - hamcam-data:/data      # writes DB + snapshots here
+    networks:
+      - hamcam-net
+    environment:
+      - TZ=${TZ:-UTC}
+      - RTSP_URL=rtsp://go2rtc:8554/cam          # go2rtc re-streams on 8554
+      - DB_PATH=/data/motion.db
+      - SNAP_DIR=/data/snapshots
+      - ACTIVE_START=${MOTION_ACTIVE_START:-20:00}   # match config.php
+      - ACTIVE_END=${MOTION_ACTIVE_END:-07:00}
+      - ALWAYS_ON=${MOTION_ALWAYS_ON:-false}
+      - THRESHOLD=${MOTION_THRESHOLD:-3000}
+      - COOLDOWN=${MOTION_COOLDOWN:-30}
+      - LOG_LEVEL=${MOTION_LOG_LEVEL:-INFO}
+      - MAX_EVENTS=${MOTION_MAX_EVENTS:-1000}
+    depends_on:
+      - go2rtc
+
+volumes:
+  hamcam-data:
+
+networks:
+  hamcam-net:
+    driver: bridge

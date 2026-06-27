@@ -1,6 +1,6 @@
 # HamCAM 🐹
 
-A self-hosted live camera dashboard for keeping an eye on a hamster - or any pet (or any
+A self-hosted live camera dashboard for keeping an eye on a hamster (or any
 RTSP/ONVIF camera on your LAN) — live video, PTZ controls, motion-detection
 logging, and snapshots, all running in Docker on your own network.
 
