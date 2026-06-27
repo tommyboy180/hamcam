@@ -36,21 +36,13 @@ straight into the dashboard. No SSH-ing in to hand-edit PHP files.
 
 **1. Clone this repo** onto the machine that will run the stack.
 
-**2. Create the three config files** the containers expect, from their
-`*.example` templates, and make them writable:
 
-```bash
-./init.sh
-```
 
-(or by hand: `cp config.example.php config.php`, `cp go2rtc.example.yaml
-go2rtc.yaml`, `cp .env.example .env`, then `chmod 666` all three)
 
-This step exists because Docker needs these files to actually exist *on
-the host* before it can bind-mount them into the containers — they start
-out as placeholders and get filled in by the wizard in the next step.
 
-**3. Build and start the stack:**
+
+
+**2. Build and start the stack:**
 
 ```bash
 docker compose up -d --build
@@ -135,7 +127,7 @@ Why three services instead of one:
 `hamcam` is the only one you're "browsing to" — `go2rtc` and `motion` just
 sit in the background doing their jobs.
 
-**4. Open `http://<docker-host>:8765`** in a browser. Nothing is
+**3. Open `http://<docker-host>:8765`** in a browser. Nothing is
 configured yet, so you'll land straight on the **setup wizard** — fill in
 your access password, camera IP/RTSP credentials, ONVIF port,
 motion-detection preferences, and a couple of networking details, then
@@ -148,7 +140,7 @@ you, logs you straight in, and takes you to the dashboard.
 > (there's no password yet to gate it). Don't leave it sitting unfinished
 > on an untrusted network — fill it in right after first boot.
 
-**5.** If you changed the **video relay**, **web UI port**, or **motion
+**4.** If you changed the **video relay**, **web UI port**, or **motion
 detector** settings, apply them with:
 
 ```bash
