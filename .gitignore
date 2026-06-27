@@ -1,0 +1,17 @@
+# --- Secrets / generated config (created by setup.php, the web wizard) ---
+config.php
+go2rtc.yaml
+.env
+
+# --- Runtime data ---
+data/
+*.db
+*.db-journal
+snapshots/
+
+# --- OS / editor cruft ---
+.DS_Store
+Thumbs.db
+*.swp
+.vscode/
+.idea/

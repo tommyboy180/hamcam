@@ -1,0 +1,6 @@
+# C:\AI-Lab\hamcam\.htaccess
+Options -Indexes
+RewriteEngine On
+
+# DO NOT put proxy rules here. 
+# They are handled by the Dockerfile VirtualHost to allow WebSockets.

@@ -1,0 +1,38 @@
+# --------------------------------------------------
+#  go2rtc config for HamCAM
+#  RTSP camera -> low-latency HLS / WebRTC
+#
+#  This is a TEMPLATE. Don't edit it directly — fill it in via the
+#  setup wizard (open the site in a browser, it'll redirect you to
+#  setup.php automatically until this is configured).
+#
+#  setup.php writes a real go2rtc.yaml using the same camera details
+#  you give it for config.php, so the two never drift out of sync.
+# --------------------------------------------------
+
+streams:
+  # Main stream (full resolution)
+  cam:
+    - rtsp://__CAMERA_USER__:__CAMERA_PASS__@__CAMERA_IP__:__CAMERA_RTSP_PORT__/__RTSP_STREAM_HD__
+
+  # Optional: sub-stream for SD quality switching
+  # cam_sd:
+  #   - rtsp://__CAMERA_USER__:__CAMERA_PASS__@__CAMERA_IP__:__CAMERA_RTSP_PORT__/__RTSP_STREAM_SD__
+
+api:
+  listen: ":1984"         # go2rtc web dashboard
+  origin: "*"             # allow HLS from the PHP container
+
+rtsp:
+  listen: ":8554"         # optional RTSP re-stream
+
+webrtc:
+  listen: ":8555/tcp"     # WebRTC (optional, for even lower latency)
+
+# Low-latency HLS settings
+hls:
+  # Segment duration in seconds — lower = less latency, more CPU
+  segment_duration: 1
+
+log:
+  level: warn
