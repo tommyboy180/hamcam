@@ -7,9 +7,9 @@ logging, and snapshots, all running in Docker on your own network.
 Built around a TP-Link Tapo C210, but anything that speaks RTSP + ONVIF
 should work with minor tweaks.
 
-<img width="505" height="636" alt="image" src="https://github.com/user-attachments/assets/7b529885-6f64-4a25-8665-fa48407a6168" />
+<center><img width="505" height="636" alt="image" src="https://github.com/user-attachments/assets/7b529885-6f64-4a25-8665-fa48407a6168" />
 
-<img width="1459" height="892" alt="image" src="https://github.com/user-attachments/assets/efcdf426-c40a-429f-99b1-c4a9a68e18f2" />
+<img width="1459" height="892" alt="image" src="https://github.com/user-attachments/assets/efcdf426-c40a-429f-99b1-c4a9a68e18f2" /></center>
 
 
 
