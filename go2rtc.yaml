@@ -2,22 +2,16 @@
 #  go2rtc config for HamCAM
 #  RTSP camera -> low-latency HLS / WebRTC
 #
-#  This is a TEMPLATE. Don't edit it directly — fill it in via the
-#  setup wizard (open the site in a browser, it'll redirect you to
-#  setup.php automatically until this is configured).
-#
-#  setup.php writes a real go2rtc.yaml using the same camera details
-#  you give it for config.php, so the two never drift out of sync.
+#  This file ships with an example camera URL so go2rtc boots
+#  cleanly (it'll just sit there unable to connect to 192.168.1.100
+#  until you finish the setup wizard at /setup.php). Don't edit this
+#  by hand — the wizard rewrites it for you, and it'll match
+#  whatever's in config.php.
 # --------------------------------------------------
 
 streams:
-  # Main stream (full resolution)
   cam:
-    - rtsp://__CAMERA_USER__:__CAMERA_PASS__@__CAMERA_IP__:__CAMERA_RTSP_PORT__/__RTSP_STREAM_HD__
-
-  # Optional: sub-stream for SD quality switching
-  # cam_sd:
-  #   - rtsp://__CAMERA_USER__:__CAMERA_PASS__@__CAMERA_IP__:__CAMERA_RTSP_PORT__/__RTSP_STREAM_SD__
+    - rtsp://admin:changeme@192.168.1.100:554/stream1
 
 api:
   listen: ":1984"         # go2rtc web dashboard

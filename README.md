@@ -21,34 +21,21 @@ should work with minor tweaks.
 
 ## How it works
 
-There's no separate installer. The PHP backend builds and boots with
-**placeholder** config, detects that it isn't configured yet, and bounces
-every page to `setup.php` — an in-browser wizard — until you fill it in.
-Once you submit the form, it writes real config files to disk and you're
-straight into the dashboard. No SSH-ing in to hand-edit PHP files.
-
-## Requirements
-
-- Docker + Docker Compose
-- A camera with RTSP and ONVIF enabled, reachable on your LAN
+`config.php`, `go2rtc.yaml`, and `.env` all ship in the repo with working
+**example** values, so the stack boots cleanly with zero setup. The app
+detects that those are just placeholders and bounces every page to
+`setup.php` — an in-browser wizard — until you fill in your real camera
+details. Submit the form and it rewrites all three files in place; you're
+straight into the dashboard. One command, one page, done.
 
 ## Setup
-
-**1. Clone this repo** onto the machine that will run the stack.
-
-
-
-
-
-
-
-**2. Build and start the stack:**
 
 ```bash
 docker compose up -d --build
 ```
 
-This is the `docker-compose.yml` that ships in the repo:
+That's the whole thing. This is the `docker-compose.yml` that ships in the
+repo:
 
 ```yaml
 services:
@@ -116,8 +103,6 @@ networks:
     driver: bridge
 ```
 
-Why three services instead of one:
-
 | Service  | What it is                          | Why it's separate |
 |----------|--------------------------------------|--------------------|
 | `hamcam` | This repo's PHP/Apache app           | The web UI, the wizard, the API |
@@ -127,21 +112,21 @@ Why three services instead of one:
 `hamcam` is the only one you're "browsing to" — `go2rtc` and `motion` just
 sit in the background doing their jobs.
 
-**3. Open `http://<docker-host>:8765`** in a browser. Nothing is
-configured yet, so you'll land straight on the **setup wizard** — fill in
-your access password, camera IP/RTSP credentials, ONVIF port,
-motion-detection preferences, and a couple of networking details, then
-hit **Finish setup**.
+Then **open `http://<docker-host>:8765`**. Nothing real is configured yet,
+so you'll land straight on the **setup wizard** — fill in your access
+password, camera IP/RTSP credentials, ONVIF port, motion-detection
+preferences, and a couple of networking details, then hit **Finish setup**.
 
-That's it — the wizard writes `config.php`, `go2rtc.yaml`, and `.env` for
-you, logs you straight in, and takes you to the dashboard.
+That's it — the wizard rewrites `config.php`, `go2rtc.yaml`, and `.env`,
+tells go2rtc to reload itself (more on that below), logs you straight in,
+and takes you to the dashboard.
 
 > ⚠️ The wizard is open to anyone on your network until you finish it
 > (there's no password yet to gate it). Don't leave it sitting unfinished
 > on an untrusted network — fill it in right after first boot.
 
-**4.** If you changed the **video relay**, **web UI port**, or **motion
-detector** settings, apply them with:
+If you changed the **motion detector settings**, **web UI port**, or
+**timezone**, apply them with:
 
 ```bash
 docker compose up -d
@@ -149,8 +134,24 @@ docker compose up -d
 
 (Login/password, camera IP/credentials, and site title take effect
 immediately — no restart needed, since `config.php` is read fresh on
-every page load. Only the things that affect container startup —
-ports, env vars, the relay's own config file — need a restart.)
+every page load.)
+
+### Why go2rtc doesn't need a manual restart
+
+go2rtc only reads `go2rtc.yaml` once, at process startup — editing the
+file on disk doesn't do anything on its own. Rather than make you run
+`docker compose restart go2rtc` every time you change camera settings,
+the wizard calls go2rtc's own `POST /api/restart` endpoint right after
+saving, which makes it reload its config and restart **in-process**
+(no Docker involved — just an HTTP call over the Compose network). The
+success page tells you whether that worked; if go2rtc happens to be
+unreachable for a moment, it falls back to suggesting the manual
+restart command.
+
+Note this doesn't apply to `${HAMCAM_PORT}` or `${TZ}` — those are
+Docker-level settings (port bindings, container environment) that no
+in-app API call can change; they genuinely need `docker compose up -d`
+to take effect.
 
 ## Reconfiguring later
 
@@ -160,16 +161,38 @@ logged in first (same session as the dashboard) — it becomes a regular
 camera-password fields blank to keep their current values; everything
 else updates to whatever you type.
 
+## A note on git
+
+`config.php` and `go2rtc.yaml` are tracked files, not gitignored — that's
+what makes the zero-setup boot possible (Docker needs them to exist as
+real files before it can bind-mount them in; if they didn't already
+exist, Docker would create them as empty *directories* instead, which is
+the directory-vs-file error this design avoids entirely).
+
+The tradeoff: once the wizard writes your real camera credentials and
+password hash into them, `git status` will show those as local changes.
+If you ever do `git add -A`/`git commit` from this same checkout for some
+other reason (pulling in a code fix, say), make sure you don't sweep
+those up too. If you'd rather git ignore your local edits to these two
+files specifically while keeping them tracked for everyone else's fresh
+clone, run this once after cloning:
+
+```bash
+git update-index --skip-worktree config.php go2rtc.yaml
+```
+
+(`.env` doesn't carry secrets — just port/timezone/motion-timing — so
+it's not a concern either way.)
+
 ## Project layout
 
 ```
 .
 ├── docker-compose.yml        # hamcam app + go2rtc + motion detector
 ├── dockerfile                  # PHP/Apache image for the app
-├── config.example.php          # template -> config.php (gitignored)
-├── go2rtc.example.yaml          # template -> go2rtc.yaml (gitignored)
-├── .env.example                  # template -> .env (gitignored)
-├── init.sh                        # one-time: creates the three files above
+├── config.php                   # ships with example values; wizard rewrites it
+├── go2rtc.yaml                   # ships with example values; wizard rewrites it
+├── .env                            # ships with sane defaults
 ├── setup.php                       # the in-browser setup wizard / settings page
 ├── setup_guard.php                  # redirects to setup.php until configured
 ├── index.php                         # login page
@@ -189,10 +212,11 @@ else updates to whatever you type.
 - The login password is stored as a **bcrypt hash** in `config.php`
   (never plaintext), verified with `password_verify()`.
 - Camera RTSP/ONVIF credentials are stored in plaintext in `config.php`
-  and `go2rtc.yaml` — both gitignored, and that's the nature of needing
-  to actively use them to connect to the camera. `config.php` is never
-  served directly (Apache executes `.php` files rather than serving
-  their source), but treat the file like any other secret.
+  and `go2rtc.yaml` — that's the nature of needing to actively use them
+  to connect to the camera. Neither file is ever served directly (Apache
+  executes `.php` files rather than serving their source; `go2rtc.yaml`
+  isn't under the web root at all), but treat them like any other secret
+  — see "A note on git" above.
 - This is designed for a trusted LAN. If you expose it to the internet,
   put it behind a reverse proxy with HTTPS and consider IP allow-listing.
 - The setup wizard is unauthenticated **only** during the initial

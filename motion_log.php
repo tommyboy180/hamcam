@@ -365,9 +365,11 @@ function updateWindowBadge() {
   const label = document.getElementById('window-label');
   const active = inActiveWindow();
   badge.className = 'window-badge' + (active ? '' : ' inactive');
-  label.textContent = active
-    ? `Monitoring ${ACTIVE_START} - ${ACTIVE_END}`
-    : `Inactive until ${ACTIVE_START}`;
+  label.textContent = ALWAYS_ON
+    ? `Monitoring 24/7`
+    : (active
+        ? `Monitoring ${ACTIVE_START} - ${ACTIVE_END}`
+        : `Inactive until ${ACTIVE_START}`);
 }
 updateWindowBadge();
 setInterval(updateWindowBadge, 60000);

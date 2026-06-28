@@ -53,18 +53,16 @@ VHEOF
 # Copy application files
 COPY . /var/www/html/
 
-# Fix permissions
-# config.php / go2rtc.yaml / .env are bind-mounted at runtime (see docker-compose.yml)
-# so the setup wizard can write to them — what matters is the *host* file
-# permissions (see init.sh), not these. Kept tolerant in case they're absent
-# at build time.
+# Fix permissions for the app files baked into the image
 RUN chown -R www-data:www-data /var/www/html && \
-    chmod -R 755 /var/www/html && \
-    (chmod 666 /var/www/html/config.php 2>/dev/null || true)
+    chmod -R 755 /var/www/html
 
-# Entrypoint script to fix /data permissions at runtime
-# (volume is mounted after build, so we can't chmod at build time)
-RUN echo '#!/bin/sh\nchown -R www-data:www-data /data 2>/dev/null || true\nchmod -R 775 /data 2>/dev/null || true\nexec apache2-foreground "$@"' > /usr/local/bin/hamcam-entrypoint.sh && \
+# Entrypoint script: fixes permissions at *runtime*, after volumes/bind-mounts
+# are attached (build-time chmod can't reach these, since docker-compose.yml
+# bind-mounts config.php / go2rtc.yaml / .env from the host, shadowing
+# whatever the image has there). This is what lets the setup wizard write to
+# them without any manual chmod/init step on the host.
+RUN echo '#!/bin/sh\nchown -R www-data:www-data /data 2>/dev/null || true\nchmod -R 775 /data 2>/dev/null || true\nchmod 666 /var/www/html/config.php /var/www/html/go2rtc.yaml /var/www/html/.env 2>/dev/null || true\nexec apache2-foreground "$@"' > /usr/local/bin/hamcam-entrypoint.sh && \
     chmod +x /usr/local/bin/hamcam-entrypoint.sh
 
 ENTRYPOINT ["/usr/local/bin/hamcam-entrypoint.sh"]

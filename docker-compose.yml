@@ -1,18 +1,16 @@
 # ============================================================
 # HamCAM docker-compose.yml
-# Version: 1.4
+# Version: 1.5
 #
 # First run, from this directory:
-#   cp config.example.php config.php
-#   cp go2rtc.example.yaml go2rtc.yaml
-#   cp .env.example .env
-#   chmod 666 config.php go2rtc.yaml .env
 #   docker compose up -d --build
 #
-# Then open the site in a browser — it auto-redirects to the setup
-# wizard (setup.php) until config.php/.env are filled in for real.
-# The wizard writes config.php, go2rtc.yaml, AND this .env file, so
-# motion-detection settings here never drift out of sync with the UI.
+# That's it. config.php / go2rtc.yaml / .env ship with working example
+# values already in place, so there's nothing to copy or chmod first.
+# Open the site in a browser and it auto-redirects to the setup wizard
+# (setup.php) until you fill those in for real. The wizard writes all
+# three files, so motion-detection settings here never drift out of
+# sync with the UI.
 # ============================================================
 services:
 

@@ -1056,9 +1056,11 @@ function mpUpdateBadge() {
   if (!badge || !label) return;
   var active = mpInWindow();
   badge.className = 'motion-window-badge' + (active ? '' : ' inactive');
-  label.textContent = active
-    ? ('Monitoring ' + MP_START + ' - ' + MP_END)
-    : ('Active ' + MP_START + ' - ' + MP_END);
+  label.textContent = MP_ALWAYS
+    ? 'Monitoring 24/7'
+    : (active
+        ? ('Monitoring ' + MP_START + ' - ' + MP_END)
+        : ('Active ' + MP_START + ' - ' + MP_END));
 }
 mpUpdateBadge();
 setInterval(mpUpdateBadge, 60000);
